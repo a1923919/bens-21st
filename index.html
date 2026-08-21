@@ -539,6 +539,17 @@ function render(){
 const moreObserver = new IntersectionObserver(es => {
   if(es.some(e => e.isIntersecting) && shown < photos.length) appendChunk();
 }, { rootMargin: "1200px" });
+/* scroll fallback — IntersectionObserver misfires in some webviews */
+let scrollTick = false;
+addEventListener("scroll", () => {
+  if(scrollTick || shown >= photos.length) return;
+  scrollTick = true;
+  requestAnimationFrame(() => {
+    scrollTick = false;
+    const s = $("moreSentinel");
+    if(s && s.getBoundingClientRect().top < innerHeight + 1200) appendChunk();
+  });
+}, { passive: true });
 
 async function refresh(){
   try{
