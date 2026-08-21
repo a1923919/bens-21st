@@ -123,6 +123,13 @@ main{padding:22px 14px calc(env(safe-area-inset-bottom) + 132px);max-width:1080p
   text-shadow:0 0 8px rgba(216,169,78,.85), 0 1px 2px rgba(8,15,38,.6);
   pointer-events:none;
 }
+.print .rchip{
+  position:absolute;left:12px;bottom:40px;display:none;align-items:center;
+  font-size:11px;font-weight:700;letter-spacing:.02em;
+  background:rgba(8,15,38,.6);color:var(--sand-100);
+  border-radius:var(--r-pill);padding:3px 9px;
+  backdrop-filter:blur(4px);pointer-events:none;
+}
 .empty{
   text-align:center;color:var(--fg2);padding:56px 24px 20px;
 }
@@ -192,6 +199,16 @@ main{padding:22px 14px calc(env(safe-area-inset-bottom) + 132px);max-width:1080p
 }
 .lb img{max-width:100%;max-height:72vh;border-radius:6px;border:6px solid var(--sand-100);box-shadow:var(--shadow-lg)}
 .lb .who{font-family:var(--font-display);font-style:italic;font-size:22px}
+.lb .reacts{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.lb .reacts button{
+  font-size:21px;line-height:1;display:flex;align-items:center;gap:6px;
+  background:var(--bg-raised);border:1px solid var(--line);border-radius:var(--r-pill);
+  padding:9px 14px;color:var(--fg1);cursor:pointer;
+  transition:transform var(--t-fast) var(--ease-disco),border-color var(--t-med) var(--ease-out),background var(--t-med) var(--ease-out);
+}
+.lb .reacts button:active{transform:scale(.88)}
+.lb .reacts button.mine{border-color:var(--gold);background:rgba(216,169,78,.18)}
+.lb .reacts button span{font-size:13px;font-weight:700;color:var(--fg2);min-width:0}
 .lb .row{display:flex;gap:12px}
 
 /* ---------- toast + flash ---------- */
@@ -279,7 +296,7 @@ body.tv .tvwrap{display:flex;flex-direction:column}
   </svg>
   <div class="eyebrow">Saturday 22 August ◆ The Photo Wall</div>
   <h1>Ben’s <em>21st</em></h1>
-  <div class="sub">Every photo you take lands on the wall — live.</div>
+  <div class="sub">Every photo you take lands on the wall, live.</div>
   <div><span class="count" id="count">◆ — on the wall</span></div>
 </header>
 
@@ -287,7 +304,7 @@ body.tv .tvwrap{display:flex;flex-direction:column}
   <div class="grid" id="grid"></div>
   <div class="empty" id="empty" hidden>
     <div class="d">◆ ◆ ◆</div>
-    <p>Nothing on the wall yet —<br>be the first shot of the night.</p>
+    <p>Nothing on the wall yet.<br>Be the first shot of the night.</p>
   </div>
   <div class="tvlink"><a href="?tv">Putting this on a big screen? Open the TV wall ◆</a></div>
 </main>
@@ -352,7 +369,6 @@ function askName(then){
   veil.innerHTML = `<div class="card">
     <div class="eyebrow">You’re on the guest list</div>
     <h2>Who’s shooting?</h2>
-    <p>Your name goes on every print you take.</p>
     <div class="namerow">
       <input id="firstIn" maxlength="20" placeholder="First name" autocomplete="given-name" enterkeyhint="next">
       <input id="lastIn" maxlength="20" placeholder="Last name" autocomplete="family-name" enterkeyhint="go">
@@ -484,8 +500,64 @@ async function uploadFiles(files){
   }
   busy.remove();
   if(ok){ flashFX(); toast(ok > 1 ? `${ok} shots on the wall ◆` : "On the wall ◆"); }
-  if(fail) toast(fail > 1 ? `${fail} photos couldn’t be read — try different shots` : "That photo couldn’t be read — try a different one", 4200);
+  if(fail) toast(fail > 1 ? `${fail} photos couldn’t be read. Try different shots` : "That photo couldn’t be read. Try a different one", 4200);
   refresh();
+}
+
+/* ---------- reactions ---------- */
+const EMOJIS = ["❤️","😂","🔥","🥂","😮"];
+let reactions = {};
+const myReacts = new Set(JSON.parse(localStorage.getItem("p21reacts") || "[]"));
+async function fetchReactions(){
+  try{
+    const res = await fetch(`${SUPA_URL}/rest/v1/party21_reactions?select=photo,emoji`, {
+      headers: { "apikey": SUPA_KEY, "Authorization": `Bearer ${SUPA_KEY}`, "Range": "0-19999" }
+    });
+    if(!res.ok) return;
+    const rows = await res.json();
+    const agg = {};
+    for(const r of rows){
+      (agg[r.photo] = agg[r.photo] || {})[r.emoji] = (agg[r.photo][r.emoji] || 0) + 1;
+    }
+    reactions = agg;
+    updateChips();
+  }catch{}
+}
+function chipText(file){
+  const r = reactions[file];
+  if(!r) return "";
+  return EMOJIS.filter(e => r[e]).map(e => `${e}${r[e] > 1 ? " " + r[e] : ""}`).join("  ");
+}
+function updateChips(){
+  document.querySelectorAll(".print").forEach(d => {
+    const chip = d.querySelector(".rchip");
+    if(!chip) return;
+    const t = chipText(d.dataset.file);
+    chip.textContent = t;
+    chip.style.display = t ? "inline-flex" : "none";
+  });
+}
+async function react(p, emoji, btn){
+  const key = `${p.file}|${emoji}`;
+  if(myReacts.has(key)) return;
+  myReacts.add(key);
+  localStorage.setItem("p21reacts", JSON.stringify([...myReacts]));
+  (reactions[p.file] = reactions[p.file] || {})[emoji] = (reactions[p.file][emoji] || 0) + 1;
+  if(btn){
+    btn.classList.add("mine");
+    btn.querySelector("span").textContent = reactions[p.file][emoji];
+  }
+  updateChips();
+  try{
+    await fetch(`${SUPA_URL}/rest/v1/party21_reactions?on_conflict=photo,emoji,guest`, {
+      method: "POST",
+      headers: {
+        "apikey": SUPA_KEY, "Authorization": `Bearer ${SUPA_KEY}`,
+        "Content-Type": "application/json", "Prefer": "resolution=ignore-duplicates"
+      },
+      body: JSON.stringify({ photo: p.file, emoji, guest: getName() || "Guest" })
+    });
+  }catch{}
 }
 
 /* ---------- listing (paged, up to 5000) ---------- */
@@ -521,8 +593,10 @@ let shown = 0;
 function makePrint(p){
   const d = document.createElement("div");
   d.className = "print";
+  d.dataset.file = p.file;
   d.innerHTML = `<img class="ph" loading="lazy" alt="Photo by ${p.who}">
     <span class="stamp">◆ 22·08·26</span>
+    <span class="rchip"></span>
     <div class="who">${p.who}</div>`;
   const img = d.querySelector("img");
   img.src = thumbUrl(p.file);
@@ -536,6 +610,7 @@ function appendChunk(){
   for(let i = shown; i < upto; i++) grid.insertBefore(makePrint(photos[i]), $("moreSentinel"));
   shown = upto;
   $("moreSentinel").style.display = shown < photos.length ? "block" : "none";
+  updateChips();
 }
 function render(){
   const grid = $("grid");
@@ -600,12 +675,19 @@ async function savePhoto(p, blob, btn){
 function lightbox(p){
   const lb = document.createElement("div");
   lb.className = "lb";
+  const r = reactions[p.file] || {};
   lb.innerHTML = `<img src="${publicUrl(p.file)}" alt="">
     <div class="who">shot by ${p.who}</div>
+    <div class="reacts">${EMOJIS.map(e =>
+      `<button data-e="${e}" class="${myReacts.has(p.file + "|" + e) ? "mine" : ""}">${e}<span>${r[e] || ""}</span></button>`
+    ).join("")}</div>
     <div class="row">
       <button class="btn btn--primary" id="saveBtn">Save photo</button>
       <button class="btn btn--ghost" id="closeBtn">Close</button>
     </div>`;
+  lb.querySelectorAll(".reacts button").forEach(b => {
+    b.onclick = e => { e.stopPropagation(); react(p, b.dataset.e, b); };
+  });
   let blob = null;
   fetch(publicUrl(p.file)).then(r => r.blob()).then(b => { blob = b; }).catch(() => {});
   lb.querySelector("#saveBtn").onclick = e => savePhoto(p, blob, e.currentTarget);
@@ -653,7 +735,9 @@ if(isTV){
   $("camInput").onchange = e => { uploadFiles([...e.target.files]); e.target.value = ""; };
   $("rollInput").onchange = e => { uploadFiles([...e.target.files]); e.target.value = ""; };
   refresh();
+  fetchReactions();
   setInterval(refresh, 8000);
+  setInterval(fetchReactions, 10000);
   if(!getName()) askName();
 }
 </script>
