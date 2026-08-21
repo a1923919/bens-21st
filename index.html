@@ -207,34 +207,45 @@ main{padding:22px 14px calc(env(safe-area-inset-bottom) + 132px);max-width:1080p
 }
 @keyframes flashfx{0%{opacity:1}100%{opacity:0}}
 
-/* ---------- TV mode ---------- */
+/* ---------- TV mode ----------
+   Three stacked zones — top bar, photo stage, bottom bar — so text and QR
+   never overlap the photo at any viewport size. */
 body.tv{overflow:hidden;height:100vh}
 body.tv header,body.tv main,body.tv .bar{display:none}
 .tvwrap{position:fixed;inset:0;background:var(--midnight-900);display:none}
-body.tv .tvwrap{display:block}
+body.tv .tvwrap{display:flex;flex-direction:column}
+.tvtop{
+  flex:0 0 auto;display:flex;justify-content:space-between;align-items:center;
+  gap:24px;padding:clamp(10px,2vh,22px) clamp(16px,3vw,36px);
+}
+.tvhead{display:flex;align-items:center;gap:16px;min-width:0}
+.tvhead .ball{width:clamp(34px,6vh,52px);height:clamp(34px,6vh,52px);margin:0;flex:0 0 auto}
+.tvhead h1{font-size:clamp(24px,5.5vh,46px);margin:0;white-space:nowrap}
+.tvqr{
+  flex:0 0 auto;display:flex;align-items:center;gap:12px;
+  background:var(--sand-100);border-radius:var(--r-md);padding:8px 14px 8px 8px;
+  box-shadow:var(--shadow-md);
+}
+.tvqr img{width:clamp(64px,12vh,110px);height:clamp(64px,12vh,110px);display:block}
+.tvqr div{font-weight:700;color:var(--midnight);font-size:clamp(10px,1.6vh,13px);letter-spacing:.06em;text-transform:uppercase;max-width:110px;text-align:left;line-height:1.35}
+.tvqr div span{color:var(--terracotta)}
+.tvstage{flex:1 1 auto;position:relative;min-height:0;margin:0 clamp(16px,3vw,36px)}
 .tvimg{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:0;transition:opacity 1.2s ease}
 .tvimg.on{opacity:1}
-.tvhead{position:absolute;top:26px;left:40px;z-index:5;display:flex;align-items:center;gap:16px}
-.tvhead .ball{width:52px;height:52px;margin:0}
-.tvhead h1{font-size:44px;margin:0;text-shadow:0 2px 18px rgba(8,15,38,.9)}
+.tvbottom{
+  flex:0 0 auto;display:flex;justify-content:space-between;align-items:baseline;
+  gap:24px;padding:clamp(8px,1.6vh,18px) clamp(16px,3vw,36px) clamp(12px,2.2vh,24px);
+}
 .tvcap{
-  position:absolute;left:42px;bottom:34px;z-index:5;
-  font-family:var(--font-display);font-style:italic;font-size:30px;color:var(--sand-100);
-  text-shadow:0 2px 14px rgba(8,15,38,.95);
+  font-family:var(--font-display);font-style:italic;
+  font-size:clamp(18px,3.6vh,32px);color:var(--sand-100);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;
 }
 .tvstamp{
-  position:absolute;right:46px;bottom:38px;z-index:5;
-  font-size:14px;font-weight:700;letter-spacing:.24em;text-transform:uppercase;
-  color:var(--gold);text-shadow:0 0 10px rgba(216,169,78,.8);
+  flex:0 0 auto;
+  font-size:clamp(10px,1.8vh,14px);font-weight:700;letter-spacing:.24em;text-transform:uppercase;
+  color:var(--gold);text-shadow:0 0 10px rgba(216,169,78,.55);
 }
-.tvqr{
-  position:absolute;top:26px;right:26px;z-index:5;text-align:center;
-  background:var(--sand-100);border-radius:var(--r-md);padding:12px 12px 9px;
-  box-shadow:var(--shadow-lg);
-}
-.tvqr img{width:132px;height:132px;display:block}
-.tvqr div{font-weight:700;color:var(--midnight);font-size:12px;letter-spacing:.06em;margin-top:7px;text-transform:uppercase}
-.tvqr div span{color:var(--terracotta)}
 
 @media (prefers-reduced-motion: reduce){
   *{animation:none!important;transition:none!important}
@@ -289,31 +300,37 @@ body.tv .tvwrap{display:block}
 <input type="file" id="rollInput" accept="image/*,.heic,.heif" multiple hidden>
 
 <div class="tvwrap" id="tvwrap">
-  <div class="tvhead">
-    <svg class="ball" viewBox="0 0 200 200" aria-hidden="true">
-      <defs>
-        <radialGradient id="mbs2" cx="38%" cy="32%" r="80%">
-          <stop offset="0%" stop-color="#FFF6DD"/><stop offset="30%" stop-color="#F0CE84"/>
-          <stop offset="62%" stop-color="#D8A94E"/><stop offset="100%" stop-color="#A9772C"/>
-        </radialGradient>
-        <pattern id="mbf2" width="20" height="20" patternUnits="userSpaceOnUse">
-          <path d="M10 0 L20 10 L10 20 L0 10 Z" fill="none" stroke="#0E1838" stroke-opacity=".28" stroke-width="1.4"/>
-          <path d="M10 0 L20 10 L10 10 Z" fill="#FFFFFF" fill-opacity=".22"/>
-          <path d="M0 10 L10 20 L10 10 Z" fill="#0E1838" fill-opacity=".18"/>
-        </pattern>
-        <clipPath id="mbc2"><circle cx="100" cy="104" r="74"/></clipPath>
-      </defs>
-      <circle cx="100" cy="104" r="74" fill="url(#mbs2)"/>
-      <circle cx="100" cy="104" r="74" fill="url(#mbf2)" clip-path="url(#mbc2)"/>
-      <circle cx="100" cy="104" r="74" fill="none" stroke="#A9772C" stroke-width="2"/>
-    </svg>
-    <h1>Ben’s <em>21st</em></h1>
+  <div class="tvtop">
+    <div class="tvhead">
+      <svg class="ball" viewBox="0 0 200 200" aria-hidden="true">
+        <defs>
+          <radialGradient id="mbs2" cx="38%" cy="32%" r="80%">
+            <stop offset="0%" stop-color="#FFF6DD"/><stop offset="30%" stop-color="#F0CE84"/>
+            <stop offset="62%" stop-color="#D8A94E"/><stop offset="100%" stop-color="#A9772C"/>
+          </radialGradient>
+          <pattern id="mbf2" width="20" height="20" patternUnits="userSpaceOnUse">
+            <path d="M10 0 L20 10 L10 20 L0 10 Z" fill="none" stroke="#0E1838" stroke-opacity=".28" stroke-width="1.4"/>
+            <path d="M10 0 L20 10 L10 10 Z" fill="#FFFFFF" fill-opacity=".22"/>
+            <path d="M0 10 L10 20 L10 10 Z" fill="#0E1838" fill-opacity=".18"/>
+          </pattern>
+          <clipPath id="mbc2"><circle cx="100" cy="104" r="74"/></clipPath>
+        </defs>
+        <circle cx="100" cy="104" r="74" fill="url(#mbs2)"/>
+        <circle cx="100" cy="104" r="74" fill="url(#mbf2)" clip-path="url(#mbc2)"/>
+        <circle cx="100" cy="104" r="74" fill="none" stroke="#A9772C" stroke-width="2"/>
+      </svg>
+      <h1>Ben’s <em>21st</em></h1>
+    </div>
+    <div class="tvqr"><img id="qrimg" alt="QR code to join the photo wall"><div>Scan <span>◆</span> add yours</div></div>
   </div>
-  <img class="tvimg" id="tvA" alt="">
-  <img class="tvimg" id="tvB" alt="">
-  <div class="tvcap" id="tvcap"></div>
-  <div class="tvstamp">◆ 22 · 08 · 26</div>
-  <div class="tvqr"><img id="qrimg" alt="QR code to join the photo wall"><div>Scan <span>◆</span> add yours</div></div>
+  <div class="tvstage">
+    <img class="tvimg" id="tvA" alt="">
+    <img class="tvimg" id="tvB" alt="">
+  </div>
+  <div class="tvbottom">
+    <div class="tvcap" id="tvcap"></div>
+    <div class="tvstamp">◆ 22 · 08 · 26</div>
+  </div>
 </div>
 
 <script>
@@ -369,6 +386,7 @@ function flashFX(){
 function slug(s){ return s.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,24) || "guest"; }
 function deslug(s){ return s.replace(/-/g," ").replace(/\b\w/g, c => c.toUpperCase()); }
 function publicUrl(name){ return `${SUPA_URL}/storage/v1/object/public/${BUCKET}/${PREFIX}${name}`; }
+function thumbUrl(name){ return `${SUPA_URL}/storage/v1/object/public/${BUCKET}/thumbs/${name}`; }
 
 /* ---------- decoding + compression ----------
    Every upload is re-encoded to JPEG so the wall renders on every device.
@@ -407,18 +425,24 @@ async function decodeImage(file){
   }
   return null;
 }
-async function compress(file){
-  const src = await decodeImage(file);
-  if(!src) return null;
-  const sw = src.width || src.naturalWidth, sh = src.height || src.naturalHeight;
-  const MAX = 1800;
-  const scale = Math.min(1, MAX / Math.max(sw, sh));
+function scaleTo(src, sw, sh, max, q){
+  const scale = Math.min(1, max / Math.max(sw, sh));
   const w = Math.round(sw * scale), h = Math.round(sh * scale);
   const cv = document.createElement("canvas");
   cv.width = w; cv.height = h;
   cv.getContext("2d").drawImage(src, 0, 0, w, h);
+  return new Promise(r => cv.toBlob(r, "image/jpeg", q));
+}
+/* returns {full, thumb} JPEGs — the grid loads thumbs (~30KB) so a wall of
+   hundreds of photos stays light on phones and on Supabase egress */
+async function compress(file){
+  const src = await decodeImage(file);
+  if(!src) return null;
+  const sw = src.width || src.naturalWidth, sh = src.height || src.naturalHeight;
+  const full = await scaleTo(src, sw, sh, 1800, 0.82);
+  const thumb = await scaleTo(src, sw, sh, 480, 0.72);
   if(src.close) src.close();
-  return await new Promise(r => cv.toBlob(r, "image/jpeg", 0.82));
+  return { full, thumb };
 }
 
 /* ---------- upload ---------- */
@@ -430,21 +454,22 @@ async function uploadFiles(files){
   let ok = 0, fail = 0;
   for(const file of files){
     try{
-      const blob = await compress(file);
-      if(!blob){ fail++; continue; }
-      const body = blob;
-      const key = `${PREFIX}${Date.now()}_${slug(name)}_${Math.random().toString(36).slice(2,7)}.jpg`;
-      const res = await fetch(`${SUPA_URL}/storage/v1/object/${BUCKET}/${key}`, {
+      const out = await compress(file);
+      if(!out){ fail++; continue; }
+      const base = `${Date.now()}_${slug(name)}_${Math.random().toString(36).slice(2,7)}.jpg`;
+      const put = (path, body) => fetch(`${SUPA_URL}/storage/v1/object/${BUCKET}/${path}`, {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${SUPA_KEY}`,
           "apikey": SUPA_KEY,
-          "Content-Type": body.type || "image/jpeg",
+          "Content-Type": "image/jpeg",
           "cache-control": "31536000"
         },
         body
       });
-      if(res.ok) ok++; else fail++;
+      const res = await put(`${PREFIX}${base}`, out.full);
+      if(res.ok){ ok++; put(`thumbs/${base}`, out.thumb).catch(() => {}); }
+      else fail++;
     }catch{ fail++; }
   }
   busy.remove();
@@ -453,17 +478,24 @@ async function uploadFiles(files){
   refresh();
 }
 
-/* ---------- listing ---------- */
+/* ---------- listing (paged, up to 5000) ---------- */
 let photos = [];
 async function fetchList(){
-  const res = await fetch(`${SUPA_URL}/storage/v1/object/list/${BUCKET}`, {
-    method: "POST",
-    headers: { "Authorization": `Bearer ${SUPA_KEY}`, "apikey": SUPA_KEY, "Content-Type": "application/json" },
-    body: JSON.stringify({ prefix: PREFIX, limit: 2000, sortBy: { column: "name", order: "desc" } })
-  });
-  if(!res.ok) throw new Error("list failed");
-  const rows = await res.json();
-  return rows
+  const all = [];
+  let offset = 0;
+  while(all.length < 5000){
+    const res = await fetch(`${SUPA_URL}/storage/v1/object/list/${BUCKET}`, {
+      method: "POST",
+      headers: { "Authorization": `Bearer ${SUPA_KEY}`, "apikey": SUPA_KEY, "Content-Type": "application/json" },
+      body: JSON.stringify({ prefix: PREFIX, limit: 1000, offset, sortBy: { column: "name", order: "desc" } })
+    });
+    if(!res.ok) throw new Error("list failed");
+    const rows = await res.json();
+    all.push(...rows);
+    if(rows.length < 1000) break;
+    offset += 1000;
+  }
+  return all
     .filter(r => r.name && !r.name.startsWith("."))
     .map(r => {
       const parts = r.name.replace(/\.[a-z0-9]+$/i,"").split("_");
@@ -472,21 +504,41 @@ async function fetchList(){
     .sort((a,b) => b.ts - a.ts);
 }
 
+/* ---------- grid (chunked render — the DOM grows as you scroll, so even a
+   1000-photo wall stays smooth on phones) ---------- */
+const CHUNK = 48;
+let shown = 0;
+function makePrint(p){
+  const d = document.createElement("div");
+  d.className = "print";
+  d.innerHTML = `<img class="ph" loading="lazy" alt="Photo by ${p.who}">
+    <span class="stamp">◆ 22·08·26</span>
+    <div class="who">${p.who}</div>`;
+  const img = d.querySelector("img");
+  img.src = thumbUrl(p.file);
+  img.onerror = () => { img.onerror = null; img.src = publicUrl(p.file); };
+  d.onclick = () => lightbox(p);
+  return d;
+}
+function appendChunk(){
+  const grid = $("grid");
+  const upto = Math.min(photos.length, shown + CHUNK);
+  for(let i = shown; i < upto; i++) grid.insertBefore(makePrint(photos[i]), $("moreSentinel"));
+  shown = upto;
+  $("moreSentinel").style.display = shown < photos.length ? "block" : "none";
+}
 function render(){
   const grid = $("grid");
-  grid.innerHTML = "";
+  grid.innerHTML = '<div id="moreSentinel" style="grid-column:1/-1;height:1px"></div>';
+  shown = 0;
   $("empty").hidden = photos.length > 0;
   $("count").textContent = `◆ ${photos.length} on the wall`;
-  for(const p of photos){
-    const d = document.createElement("div");
-    d.className = "print";
-    d.innerHTML = `<img class="ph" loading="lazy" src="${publicUrl(p.file)}" alt="Photo by ${p.who}">
-      <span class="stamp">◆ 22·08·26</span>
-      <div class="who">${p.who}</div>`;
-    d.onclick = () => lightbox(p);
-    grid.appendChild(d);
-  }
+  appendChunk();
+  moreObserver.observe($("moreSentinel"));
 }
+const moreObserver = new IntersectionObserver(es => {
+  if(es.some(e => e.isIntersecting) && shown < photos.length) appendChunk();
+}, { rootMargin: "1200px" });
 
 async function refresh(){
   try{
