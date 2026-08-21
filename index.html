@@ -128,6 +128,13 @@ main{padding:22px 14px calc(env(safe-area-inset-bottom) + 132px);max-width:1080p
 }
 .empty .d{color:var(--gold);letter-spacing:.4em;margin-bottom:14px}
 .empty p{font-family:var(--font-display);font-style:italic;font-size:24px;line-height:1.35}
+.tvlink{text-align:center;padding:34px 20px 0}
+.tvlink a{
+  color:var(--fg3);font-size:13px;font-weight:600;letter-spacing:.06em;text-decoration:none;
+  border-bottom:1px solid var(--line);padding-bottom:2px;
+  transition:color var(--t-med) var(--ease-out),border-color var(--t-med) var(--ease-out);
+}
+.tvlink a:hover{color:var(--gold);border-color:var(--gold)}
 
 /* ---------- upload bar ---------- */
 .bar{
@@ -270,6 +277,7 @@ body.tv .tvwrap{display:block}
     <div class="d">◆ ◆ ◆</div>
     <p>Nothing on the wall yet —<br>be the first shot of the night.</p>
   </div>
+  <div class="tvlink"><a href="?tv">Putting this on a big screen? Open the TV wall ◆</a></div>
 </main>
 
 <div class="bar">
@@ -278,7 +286,7 @@ body.tv .tvwrap{display:block}
 </div>
 
 <input type="file" id="camInput" accept="image/*" capture="environment" hidden>
-<input type="file" id="rollInput" accept="image/*" multiple hidden>
+<input type="file" id="rollInput" accept="image/*,.heic,.heif" multiple hidden>
 
 <div class="tvwrap" id="tvwrap">
   <div class="tvhead">
@@ -362,18 +370,54 @@ function slug(s){ return s.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|
 function deslug(s){ return s.replace(/-/g," ").replace(/\b\w/g, c => c.toUpperCase()); }
 function publicUrl(name){ return `${SUPA_URL}/storage/v1/object/public/${BUCKET}/${PREFIX}${name}`; }
 
-/* ---------- compression ---------- */
+/* ---------- decoding + compression ----------
+   Every upload is re-encoded to JPEG so the wall renders on every device.
+   Decode chain: createImageBitmap (EXIF-aware) → <img> element (Safari
+   decodes HEIC natively) → heic2any wasm (Chrome/Android HEIC). */
+let heicLibLoading = null;
+function loadHeicLib(){
+  if(window.heic2any) return Promise.resolve();
+  if(!heicLibLoading){
+    heicLibLoading = new Promise((res, rej) => {
+      const s = document.createElement("script");
+      s.src = "https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js";
+      s.onload = res; s.onerror = rej;
+      document.head.appendChild(s);
+    });
+  }
+  return heicLibLoading;
+}
+async function decodeImage(file){
+  try { return await createImageBitmap(file, { imageOrientation: "from-image" }); } catch {}
+  try { return await createImageBitmap(file); } catch {}
+  try {
+    const url = URL.createObjectURL(file);
+    try {
+      const img = new Image();
+      await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = url; });
+      if(img.naturalWidth > 0) return img;
+    } finally { URL.revokeObjectURL(url); }
+  } catch {}
+  if(/hei[cf]/i.test(file.type) || /\.hei[cf]$/i.test(file.name)){
+    try {
+      await loadHeicLib();
+      const out = await heic2any({ blob: file, toType: "image/jpeg", quality: 0.85 });
+      return await createImageBitmap(Array.isArray(out) ? out[0] : out);
+    } catch {}
+  }
+  return null;
+}
 async function compress(file){
-  let bmp;
-  try { bmp = await createImageBitmap(file); }
-  catch { return null; }
+  const src = await decodeImage(file);
+  if(!src) return null;
+  const sw = src.width || src.naturalWidth, sh = src.height || src.naturalHeight;
   const MAX = 1800;
-  const scale = Math.min(1, MAX / Math.max(bmp.width, bmp.height));
-  const w = Math.round(bmp.width * scale), h = Math.round(bmp.height * scale);
+  const scale = Math.min(1, MAX / Math.max(sw, sh));
+  const w = Math.round(sw * scale), h = Math.round(sh * scale);
   const cv = document.createElement("canvas");
   cv.width = w; cv.height = h;
-  cv.getContext("2d").drawImage(bmp, 0, 0, w, h);
-  bmp.close();
+  cv.getContext("2d").drawImage(src, 0, 0, w, h);
+  if(src.close) src.close();
   return await new Promise(r => cv.toBlob(r, "image/jpeg", 0.82));
 }
 
@@ -386,14 +430,10 @@ async function uploadFiles(files){
   let ok = 0, fail = 0;
   for(const file of files){
     try{
-      let blob = await compress(file);
-      let ext = "jpg", body = blob;
-      if(!blob){
-        if(file.size > 10*1024*1024){ fail++; continue; }
-        body = file;
-        ext = (file.name.split(".").pop() || "jpg").toLowerCase();
-      }
-      const key = `${PREFIX}${Date.now()}_${slug(name)}_${Math.random().toString(36).slice(2,7)}.${ext}`;
+      const blob = await compress(file);
+      if(!blob){ fail++; continue; }
+      const body = blob;
+      const key = `${PREFIX}${Date.now()}_${slug(name)}_${Math.random().toString(36).slice(2,7)}.jpg`;
       const res = await fetch(`${SUPA_URL}/storage/v1/object/${BUCKET}/${key}`, {
         method: "POST",
         headers: {
@@ -409,7 +449,7 @@ async function uploadFiles(files){
   }
   busy.remove();
   if(ok){ flashFX(); toast(ok > 1 ? `${ok} shots on the wall ◆` : "On the wall ◆"); }
-  if(fail) toast(`${fail} didn’t develop — try again`, 4000);
+  if(fail) toast(fail > 1 ? `${fail} photos couldn’t be read — try different shots` : "That photo couldn’t be read — try a different one", 4200);
   refresh();
 }
 
