@@ -461,17 +461,46 @@ async function refresh(){
   }
 }
 
-/* ---------- lightbox ---------- */
+/* ---------- lightbox + save ---------- */
+async function savePhoto(p, blob, btn){
+  const label = btn.textContent;
+  try{
+    if(!blob){
+      btn.textContent = "Saving…";
+      blob = await (await fetch(publicUrl(p.file))).blob();
+    }
+    const file = new File([blob], `bens-21st-${p.file.split("_").pop()}`, { type: blob.type || "image/jpeg" });
+    if(navigator.canShare && navigator.canShare({ files: [file] })){
+      await navigator.share({ files: [file] });
+    }else{
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = file.name;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+    }
+    btn.textContent = "Saved ◆";
+    setTimeout(() => { btn.textContent = label; }, 2000);
+  }catch(e){
+    btn.textContent = label;
+    if(e.name !== "AbortError") window.open(publicUrl(p.file), "_blank");
+  }
+}
 function lightbox(p){
   const lb = document.createElement("div");
   lb.className = "lb";
   lb.innerHTML = `<img src="${publicUrl(p.file)}" alt="">
     <div class="who">shot by ${p.who}</div>
     <div class="row">
-      <a class="btn btn--primary" href="${publicUrl(p.file)}" download target="_blank" rel="noopener">Save photo</a>
-      <button class="btn btn--ghost">Close</button>
+      <button class="btn btn--primary" id="saveBtn">Save photo</button>
+      <button class="btn btn--ghost" id="closeBtn">Close</button>
     </div>`;
-  lb.querySelector("button").onclick = () => lb.remove();
+  let blob = null;
+  fetch(publicUrl(p.file)).then(r => r.blob()).then(b => { blob = b; }).catch(() => {});
+  lb.querySelector("#saveBtn").onclick = e => savePhoto(p, blob, e.currentTarget);
+  lb.querySelector("#closeBtn").onclick = () => lb.remove();
   lb.onclick = e => { if(e.target === lb) lb.remove(); };
   document.body.appendChild(lb);
 }
