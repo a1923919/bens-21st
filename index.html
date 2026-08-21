@@ -539,17 +539,13 @@ function render(){
 const moreObserver = new IntersectionObserver(es => {
   if(es.some(e => e.isIntersecting) && shown < photos.length) appendChunk();
 }, { rootMargin: "1200px" });
-/* scroll fallback — IntersectionObserver misfires in some webviews */
-let scrollTick = false;
-addEventListener("scroll", () => {
-  if(scrollTick || shown >= photos.length) return;
-  scrollTick = true;
-  requestAnimationFrame(() => {
-    scrollTick = false;
-    const s = $("moreSentinel");
-    if(s && s.getBoundingClientRect().top < innerHeight + 1200) appendChunk();
-  });
-}, { passive: true });
+/* position poll — loads the next chunk whenever the end of the grid nears
+   the viewport; works even where IntersectionObserver/scroll events don't */
+setInterval(() => {
+  if(isTV || shown >= photos.length) return;
+  const s = $("moreSentinel");
+  if(s && s.getBoundingClientRect().top < innerHeight + 1400) appendChunk();
+}, 500);
 
 async function refresh(){
   try{
