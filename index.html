@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Ben’s 21st — The Photo Wall</title>
+<meta name="theme-color" content="#0E1838">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Cdefs%3E%3CradialGradient id='s' cx='38%25' cy='32%25' r='80%25'%3E%3Cstop offset='0%25' stop-color='%23FFF6DD'/%3E%3Cstop offset='30%25' stop-color='%23F0CE84'/%3E%3Cstop offset='62%25' stop-color='%23D8A94E'/%3E%3Cstop offset='100%25' stop-color='%23A9772C'/%3E%3C/radialGradient%3E%3C/defs%3E%3Ccircle cx='100' cy='104' r='74' fill='url(%23s)'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,600;0,6..96,700;0,6..96,800;1,6..96,400;1,6..96,600;1,6..96,700&family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/@phosphor-icons/web"></script>
+<style>
+:root{
+  --midnight:#0E1838; --midnight-900:#080F26; --midnight-700:#1B2A55; --midnight-500:#2C3E73;
+  --terracotta:#C2593A; --terracotta-300:#DC8666;
+  --gold:#D8A94E; --gold-light:#F0CE84; --gold-deep:#A9772C;
+  --sand:#F4ECDB; --sand-200:#E7D8BC; --sand-100:#FBF6EC;
+  --coral:#FF5C45; --coral-600:#E23E2C;
+  --grad-gold:linear-gradient(150deg,var(--gold-light) 0%,var(--gold) 42%,var(--gold-deep) 100%);
+  --grad-gold-foil:linear-gradient(105deg,#A9772C 0%,#F0CE84 26%,#FFF6DD 38%,#D8A94E 52%,#A9772C 78%,#F0CE84 100%);
+  --grad-dusk:linear-gradient(180deg,#1B2A55 0%,#0E1838 55%,#080F26 100%);
+  --bg:var(--midnight); --bg-raised:var(--midnight-700); --bg-sunk:var(--midnight-900);
+  --fg1:var(--sand); --fg2:#C7CBDC; --fg3:#8A91AE;
+  --pop:var(--coral); --pop-ink:var(--sand-100);
+  --line:var(--midnight-500); --line-soft:rgba(244,236,219,.12);
+  --r-md:14px; --r-lg:22px; --r-pill:999px;
+  --shadow-md:0 8px 24px -8px rgba(8,15,38,.55);
+  --shadow-lg:0 24px 60px -18px rgba(8,15,38,.70);
+  --glow-gold:0 0 0 1px rgba(216,169,78,.45),0 8px 30px -6px rgba(216,169,78,.45);
+  --glow-coral:0 0 0 1px rgba(255,92,69,.40),0 10px 34px -8px rgba(255,92,69,.50);
+  --ease-out:cubic-bezier(.2,.7,.2,1);
+  --ease-disco:cubic-bezier(.34,1.56,.5,1);
+  --t-fast:140ms; --t-med:240ms;
+  --font-display:'Bodoni Moda','Times New Roman',serif;
+  --font-body:'Hanken Grotesk',system-ui,-apple-system,sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{background:var(--midnight-900)}
+body{
+  font-family:var(--font-body);
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64'%3E%3Cpath d='M32 0 L64 32 L32 64 L0 32 Z M32 16 L48 32 L32 48 L16 32 Z' fill='none' stroke='%23D8A94E' stroke-opacity='.05' stroke-width='1.2'/%3E%3C/svg%3E"),
+    var(--grad-dusk);
+  background-attachment:fixed;
+  color:var(--fg1);
+  font-size:17px;line-height:1.6;
+  min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+  overscroll-behavior-y:contain;
+}
+
+/* ---------- header ---------- */
+header{
+  padding:calc(env(safe-area-inset-top) + 30px) 20px 4px;
+  text-align:center;
+}
+.ball{width:64px;height:64px;margin:0 auto 10px;display:block;animation:ballspin 26s linear infinite}
+@keyframes ballspin{from{transform:rotate(-4deg)}50%{transform:rotate(4deg)}to{transform:rotate(-4deg)}}
+.eyebrow{
+  font-size:clamp(10px,2.9vw,13px);font-weight:600;letter-spacing:.24em;text-transform:uppercase;
+  color:var(--gold);white-space:nowrap;
+}
+h1{
+  font-family:var(--font-display);
+  font-weight:800;
+  font-size:clamp(52px,13vw,110px);
+  line-height:.95;letter-spacing:-.01em;
+  margin:.08em 0 .05em;
+}
+h1 em{
+  font-style:italic;font-weight:700;
+  background:var(--grad-gold-foil);
+  background-size:200% 100%;
+  -webkit-background-clip:text;background-clip:text;
+  color:transparent;-webkit-text-fill-color:transparent;
+  animation:sheen 7s ease-in-out infinite;
+}
+@keyframes sheen{0%,100%{background-position:0% 0}50%{background-position:100% 0}}
+.sub{color:var(--fg2);font-size:16px}
+.count{
+  display:inline-flex;align-items:center;gap:7px;
+  margin-top:14px;
+  font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  padding:6px 14px;border-radius:var(--r-pill);
+  background:rgba(216,169,78,.16);color:var(--gold);border:1px solid rgba(216,169,78,.4);
+}
+
+/* ---------- grid of prints ---------- */
+main{padding:22px 14px calc(env(safe-area-inset-bottom) + 132px);max-width:1080px;margin:0 auto}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+@media(min-width:640px){.grid{grid-template-columns:repeat(3,1fr)}}
+@media(min-width:960px){.grid{grid-template-columns:repeat(4,1fr)}}
+.print{
+  background:var(--sand-100);
+  padding:7px 7px 34px;
+  border-radius:4px;
+  box-shadow:var(--shadow-md);
+  cursor:pointer;
+  position:relative;
+  transition:transform var(--t-fast) var(--ease-disco), box-shadow var(--t-med) var(--ease-out);
+  animation:develop .7s var(--ease-out) both;
+}
+.print:nth-child(3n){rotate:1.2deg}
+.print:nth-child(3n+1){rotate:-1deg}
+.print:nth-child(4n){rotate:.5deg}
+.print:hover{box-shadow:var(--shadow-lg)}
+.print:active{transform:scale(.96)}
+@keyframes develop{from{opacity:0;filter:brightness(2.1) saturate(.25)}to{opacity:1;filter:none}}
+.print .ph{
+  width:100%;aspect-ratio:1/1;object-fit:cover;display:block;background:var(--sand-200);border-radius:2px;
+}
+.print .who{
+  position:absolute;left:0;right:0;bottom:6px;
+  font-family:var(--font-display);font-style:italic;font-weight:600;
+  font-size:16px;color:var(--midnight);
+  text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 10px;
+}
+.print .stamp{
+  position:absolute;right:14px;bottom:40px;
+  font-size:10.5px;font-weight:700;letter-spacing:.14em;
+  color:var(--gold);
+  text-shadow:0 0 8px rgba(216,169,78,.85), 0 1px 2px rgba(8,15,38,.6);
+  pointer-events:none;
+}
+.empty{
+  text-align:center;color:var(--fg2);padding:56px 24px 20px;
+}
+.empty .d{color:var(--gold);letter-spacing:.4em;margin-bottom:14px}
+.empty p{font-family:var(--font-display);font-style:italic;font-size:24px;line-height:1.35}
+
+/* ---------- upload bar ---------- */
+.bar{
+  position:fixed;left:0;right:0;bottom:0;z-index:40;
+  padding:18px 18px calc(env(safe-area-inset-bottom) + 18px);
+  display:flex;gap:12px;justify-content:center;align-items:center;
+  background:linear-gradient(transparent, rgba(8,15,38,.94) 40%);
+}
+.btn{
+  font-family:var(--font-body);font-weight:700;font-size:15px;letter-spacing:.02em;
+  display:inline-flex;align-items:center;justify-content:center;gap:9px;
+  padding:15px 28px;border-radius:var(--r-pill);
+  border:1px solid transparent;cursor:pointer;text-decoration:none;
+  transition:transform var(--t-fast) var(--ease-disco),box-shadow var(--t-med) var(--ease-out),background var(--t-med) var(--ease-out);
+}
+.btn:active{transform:scale(.96)}
+.btn i{font-size:20px}
+.btn--primary{background:var(--coral);color:var(--pop-ink);box-shadow:var(--glow-coral)}
+.btn--primary:hover{background:var(--coral-600)}
+.btn--ghost{background:rgba(8,15,38,.6);color:var(--fg1);border-color:var(--line);backdrop-filter:blur(8px)}
+.btn--ghost:hover{border-color:var(--gold);color:var(--gold)}
+.btn--gold{background:var(--grad-gold);color:var(--midnight-900);box-shadow:var(--glow-gold)}
+
+/* ---------- name modal ---------- */
+.veil{
+  position:fixed;inset:0;z-index:60;background:rgba(8,15,38,.82);
+  display:flex;align-items:center;justify-content:center;padding:24px;
+  backdrop-filter:blur(7px);
+}
+.card{
+  background:var(--bg-raised);color:var(--fg1);
+  border:1px solid rgba(216,169,78,.5);
+  border-radius:var(--r-lg);
+  padding:32px 26px;max-width:380px;width:100%;text-align:center;
+  box-shadow:var(--shadow-lg);
+}
+.card .eyebrow{margin-bottom:8px}
+.card h2{font-family:var(--font-display);font-weight:700;font-size:30px;line-height:1.08}
+.card p{color:var(--fg2);font-size:15px;margin:8px 0 20px}
+.card input{
+  font-family:var(--font-body);font-size:16px;font-weight:600;color:var(--fg1);
+  background:var(--bg-sunk);border:1.5px solid var(--line);border-radius:var(--r-md);
+  padding:13px 15px;width:100%;text-align:center;
+  transition:border-color var(--t-med) var(--ease-out),box-shadow var(--t-med) var(--ease-out);
+}
+.card input::placeholder{color:var(--fg3)}
+.card input:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(216,169,78,.22)}
+.card .btn{margin-top:16px;width:100%}
+
+/* ---------- lightbox ---------- */
+.lb{
+  position:fixed;inset:0;z-index:70;background:rgba(8,15,38,.96);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:20px;
+}
+.lb img{max-width:100%;max-height:72vh;border-radius:6px;border:6px solid var(--sand-100);box-shadow:var(--shadow-lg)}
+.lb .who{font-family:var(--font-display);font-style:italic;font-size:22px}
+.lb .row{display:flex;gap:12px}
+
+/* ---------- toast + flash ---------- */
+.toast{
+  position:fixed;top:calc(env(safe-area-inset-top) + 16px);left:50%;transform:translateX(-50%);
+  z-index:80;background:var(--sand-100);color:var(--midnight);font-weight:700;font-size:14.5px;
+  padding:12px 24px;border-radius:var(--r-pill);box-shadow:var(--shadow-lg);
+  white-space:nowrap;animation:toastin var(--t-med) var(--ease-disco);
+}
+@keyframes toastin{from{opacity:0;transform:translate(-50%,-14px)}to{opacity:1;transform:translate(-50%,0)}}
+.flashfx{
+  position:fixed;inset:0;z-index:90;background:#FFF6DD;pointer-events:none;
+  animation:flashfx .55s ease-out forwards;
+}
+@keyframes flashfx{0%{opacity:1}100%{opacity:0}}
+
+/* ---------- TV mode ---------- */
+body.tv{overflow:hidden;height:100vh}
+body.tv header,body.tv main,body.tv .bar{display:none}
+.tvwrap{position:fixed;inset:0;background:var(--midnight-900);display:none}
+body.tv .tvwrap{display:block}
+.tvimg{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:0;transition:opacity 1.2s ease}
+.tvimg.on{opacity:1}
+.tvhead{position:absolute;top:26px;left:40px;z-index:5;display:flex;align-items:center;gap:16px}
+.tvhead .ball{width:52px;height:52px;margin:0}
+.tvhead h1{font-size:44px;margin:0;text-shadow:0 2px 18px rgba(8,15,38,.9)}
+.tvcap{
+  position:absolute;left:42px;bottom:34px;z-index:5;
+  font-family:var(--font-display);font-style:italic;font-size:30px;color:var(--sand-100);
+  text-shadow:0 2px 14px rgba(8,15,38,.95);
+}
+.tvstamp{
+  position:absolute;right:46px;bottom:38px;z-index:5;
+  font-size:14px;font-weight:700;letter-spacing:.24em;text-transform:uppercase;
+  color:var(--gold);text-shadow:0 0 10px rgba(216,169,78,.8);
+}
+.tvqr{
+  position:absolute;top:26px;right:26px;z-index:5;text-align:center;
+  background:var(--sand-100);border-radius:var(--r-md);padding:12px 12px 9px;
+  box-shadow:var(--shadow-lg);
+}
+.tvqr img{width:132px;height:132px;display:block}
+.tvqr div{font-weight:700;color:var(--midnight);font-size:12px;letter-spacing:.06em;margin-top:7px;text-transform:uppercase}
+.tvqr div span{color:var(--terracotta)}
+
+@media (prefers-reduced-motion: reduce){
+  *{animation:none!important;transition:none!important}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <svg class="ball" viewBox="0 0 200 200" aria-hidden="true">
+    <defs>
+      <radialGradient id="mbs" cx="38%" cy="32%" r="80%">
+        <stop offset="0%" stop-color="#FFF6DD"/><stop offset="30%" stop-color="#F0CE84"/>
+        <stop offset="62%" stop-color="#D8A94E"/><stop offset="100%" stop-color="#A9772C"/>
+      </radialGradient>
+      <pattern id="mbf" width="20" height="20" patternUnits="userSpaceOnUse">
+        <path d="M10 0 L20 10 L10 20 L0 10 Z" fill="none" stroke="#0E1838" stroke-opacity=".28" stroke-width="1.4"/>
+        <path d="M10 0 L20 10 L10 10 Z" fill="#FFFFFF" fill-opacity=".22"/>
+        <path d="M0 10 L10 20 L10 10 Z" fill="#0E1838" fill-opacity=".18"/>
+      </pattern>
+      <clipPath id="mbc"><circle cx="100" cy="104" r="74"/></clipPath>
+    </defs>
+    <path d="M100 14 L100 30" stroke="#A9772C" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="100" cy="12" r="5" fill="none" stroke="#A9772C" stroke-width="3"/>
+    <circle cx="100" cy="104" r="74" fill="url(#mbs)"/>
+    <circle cx="100" cy="104" r="74" fill="url(#mbf)" clip-path="url(#mbc)"/>
+    <circle cx="100" cy="104" r="74" fill="none" stroke="#A9772C" stroke-width="2"/>
+    <path d="M70 70 l5 5 l-5 5 l-5 -5 z" fill="#FFF6DD"/>
+    <path d="M120 120 l4 4 l-4 4 l-4 -4 z" fill="#FFF6DD" fill-opacity=".8"/>
+  </svg>
+  <div class="eyebrow">Saturday 22 August ◆ The Photo Wall</div>
+  <h1>Ben’s <em>21st</em></h1>
+  <div class="sub">Every photo you take lands on the wall — live.</div>
+  <div><span class="count" id="count">◆ — on the wall</span></div>
+</header>
+
+<main>
+  <div class="grid" id="grid"></div>
+  <div class="empty" id="empty" hidden>
+    <div class="d">◆ ◆ ◆</div>
+    <p>Nothing on the wall yet —<br>be the first shot of the night.</p>
+  </div>
+</main>
+
+<div class="bar">
+  <button class="btn btn--primary" id="snapBtn"><i class="ph ph-camera"></i>Take a photo</button>
+  <button class="btn btn--ghost" id="rollBtn"><i class="ph ph-images"></i>Upload</button>
+</div>
+
+<input type="file" id="camInput" accept="image/*" capture="environment" hidden>
+<input type="file" id="rollInput" accept="image/*" multiple hidden>
+
+<div class="tvwrap" id="tvwrap">
+  <div class="tvhead">
+    <svg class="ball" viewBox="0 0 200 200" aria-hidden="true">
+      <defs>
+        <radialGradient id="mbs2" cx="38%" cy="32%" r="80%">
+          <stop offset="0%" stop-color="#FFF6DD"/><stop offset="30%" stop-color="#F0CE84"/>
+          <stop offset="62%" stop-color="#D8A94E"/><stop offset="100%" stop-color="#A9772C"/>
+        </radialGradient>
+        <pattern id="mbf2" width="20" height="20" patternUnits="userSpaceOnUse">
+          <path d="M10 0 L20 10 L10 20 L0 10 Z" fill="none" stroke="#0E1838" stroke-opacity=".28" stroke-width="1.4"/>
+          <path d="M10 0 L20 10 L10 10 Z" fill="#FFFFFF" fill-opacity=".22"/>
+          <path d="M0 10 L10 20 L10 10 Z" fill="#0E1838" fill-opacity=".18"/>
+        </pattern>
+        <clipPath id="mbc2"><circle cx="100" cy="104" r="74"/></clipPath>
+      </defs>
+      <circle cx="100" cy="104" r="74" fill="url(#mbs2)"/>
+      <circle cx="100" cy="104" r="74" fill="url(#mbf2)" clip-path="url(#mbc2)"/>
+      <circle cx="100" cy="104" r="74" fill="none" stroke="#A9772C" stroke-width="2"/>
+    </svg>
+    <h1>Ben’s <em>21st</em></h1>
+  </div>
+  <img class="tvimg" id="tvA" alt="">
+  <img class="tvimg" id="tvB" alt="">
+  <div class="tvcap" id="tvcap"></div>
+  <div class="tvstamp">◆ 22 · 08 · 26</div>
+  <div class="tvqr"><img id="qrimg" alt="QR code to join the photo wall"><div>Scan <span>◆</span> add yours</div></div>
+</div>
+
+<script>
+const SUPA_URL = "https://hgyryzccpfvjbttqvetf.supabase.co";
+const SUPA_KEY = "sb_publishable__27t_f-uhg4Kt2pQcZO4Lw_O0dQXwXS";
+const BUCKET = "party21";
+const PREFIX = "photos/";
+
+const $ = id => document.getElementById(id);
+const isTV = new URLSearchParams(location.search).has("tv");
+
+/* ---------- guest name ---------- */
+function getName(){ return localStorage.getItem("p21name") || ""; }
+function askName(then){
+  if(document.querySelector(".veil")) return;
+  const veil = document.createElement("div");
+  veil.className = "veil";
+  veil.innerHTML = `<div class="card">
+    <div class="eyebrow">You’re on the guest list</div>
+    <h2>Who’s shooting?</h2>
+    <p>Your name goes on every print you take.</p>
+    <input id="nameIn" maxlength="24" placeholder="Your name" autocomplete="name" enterkeyhint="go">
+    <button class="btn btn--gold" id="nameGo">Start shooting</button>
+  </div>`;
+  document.body.appendChild(veil);
+  const input = veil.querySelector("#nameIn");
+  setTimeout(() => input.focus(), 50);
+  const go = () => {
+    const v = input.value.trim();
+    if(!v){ input.style.borderColor = "var(--coral)"; input.placeholder = "Tell us your name first"; return; }
+    localStorage.setItem("p21name", v);
+    veil.remove();
+    if(then) then();
+  };
+  veil.querySelector("#nameGo").onclick = go;
+  input.onkeydown = e => { if(e.key === "Enter") go(); };
+}
+
+/* ---------- helpers ---------- */
+function toast(msg, ms=2600){
+  const t = document.createElement("div");
+  t.className = "toast"; t.textContent = msg;
+  document.body.appendChild(t);
+  if(ms) setTimeout(() => t.remove(), ms);
+  return t;
+}
+function flashFX(){
+  const f = document.createElement("div");
+  f.className = "flashfx";
+  document.body.appendChild(f);
+  setTimeout(() => f.remove(), 600);
+}
+function slug(s){ return s.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,24) || "guest"; }
+function deslug(s){ return s.replace(/-/g," ").replace(/\b\w/g, c => c.toUpperCase()); }
+function publicUrl(name){ return `${SUPA_URL}/storage/v1/object/public/${BUCKET}/${PREFIX}${name}`; }
+
+/* ---------- compression ---------- */
+async function compress(file){
+  let bmp;
+  try { bmp = await createImageBitmap(file); }
+  catch { return null; }
+  const MAX = 1800;
+  const scale = Math.min(1, MAX / Math.max(bmp.width, bmp.height));
+  const w = Math.round(bmp.width * scale), h = Math.round(bmp.height * scale);
+  const cv = document.createElement("canvas");
+  cv.width = w; cv.height = h;
+  cv.getContext("2d").drawImage(bmp, 0, 0, w, h);
+  bmp.close();
+  return await new Promise(r => cv.toBlob(r, "image/jpeg", 0.82));
+}
+
+/* ---------- upload ---------- */
+async function uploadFiles(files){
+  if(!files.length) return;
+  const name = getName();
+  if(!name){ askName(() => uploadFiles(files)); return; }
+  const busy = toast(files.length > 1 ? `Developing ${files.length} shots…` : "Developing…", 0);
+  let ok = 0, fail = 0;
+  for(const file of files){
+    try{
+      let blob = await compress(file);
+      let ext = "jpg", body = blob;
+      if(!blob){
+        if(file.size > 10*1024*1024){ fail++; continue; }
+        body = file;
+        ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+      }
+      const key = `${PREFIX}${Date.now()}_${slug(name)}_${Math.random().toString(36).slice(2,7)}.${ext}`;
+      const res = await fetch(`${SUPA_URL}/storage/v1/object/${BUCKET}/${key}`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${SUPA_KEY}`,
+          "apikey": SUPA_KEY,
+          "Content-Type": body.type || "image/jpeg",
+          "cache-control": "31536000"
+        },
+        body
+      });
+      if(res.ok) ok++; else fail++;
+    }catch{ fail++; }
+  }
+  busy.remove();
+  if(ok){ flashFX(); toast(ok > 1 ? `${ok} shots on the wall ◆` : "On the wall ◆"); }
+  if(fail) toast(`${fail} didn’t develop — try again`, 4000);
+  refresh();
+}
+
+/* ---------- listing ---------- */
+let photos = [];
+async function fetchList(){
+  const res = await fetch(`${SUPA_URL}/storage/v1/object/list/${BUCKET}`, {
+    method: "POST",
+    headers: { "Authorization": `Bearer ${SUPA_KEY}`, "apikey": SUPA_KEY, "Content-Type": "application/json" },
+    body: JSON.stringify({ prefix: PREFIX, limit: 2000, sortBy: { column: "name", order: "desc" } })
+  });
+  if(!res.ok) throw new Error("list failed");
+  const rows = await res.json();
+  return rows
+    .filter(r => r.name && !r.name.startsWith("."))
+    .map(r => {
+      const parts = r.name.replace(/\.[a-z0-9]+$/i,"").split("_");
+      return { file: r.name, who: parts.length >= 2 ? deslug(parts[1]) : "Guest", ts: Number(parts[0]) || 0 };
+    })
+    .sort((a,b) => b.ts - a.ts);
+}
+
+function render(){
+  const grid = $("grid");
+  grid.innerHTML = "";
+  $("empty").hidden = photos.length > 0;
+  $("count").textContent = `◆ ${photos.length} on the wall`;
+  for(const p of photos){
+    const d = document.createElement("div");
+    d.className = "print";
+    d.innerHTML = `<img class="ph" loading="lazy" src="${publicUrl(p.file)}" alt="Photo by ${p.who}">
+      <span class="stamp">◆ 22·08·26</span>
+      <div class="who">${p.who}</div>`;
+    d.onclick = () => lightbox(p);
+    grid.appendChild(d);
+  }
+}
+
+async function refresh(){
+  try{
+    const next = await fetchList();
+    const changed = next.length !== photos.length || (next[0] && photos[0] && next[0].file !== photos[0].file);
+    photos = next;
+    if(isTV) tvQueueSync();
+    else if(changed || !$("grid").children.length) render();
+    else $("count").textContent = `◆ ${photos.length} on the wall`;
+  }catch(e){
+    if(!photos.length && !isTV) $("empty").hidden = false;
+  }
+}
+
+/* ---------- lightbox ---------- */
+function lightbox(p){
+  const lb = document.createElement("div");
+  lb.className = "lb";
+  lb.innerHTML = `<img src="${publicUrl(p.file)}" alt="">
+    <div class="who">shot by ${p.who}</div>
+    <div class="row">
+      <a class="btn btn--primary" href="${publicUrl(p.file)}" download target="_blank" rel="noopener">Save photo</a>
+      <button class="btn btn--ghost">Close</button>
+    </div>`;
+  lb.querySelector("button").onclick = () => lb.remove();
+  lb.onclick = e => { if(e.target === lb) lb.remove(); };
+  document.body.appendChild(lb);
+}
+
+/* ---------- TV slideshow ---------- */
+let tvIdx = 0, tvOnA = true, tvSeen = new Set(), tvFresh = [];
+function tvQueueSync(){
+  for(const p of photos){
+    if(!tvSeen.has(p.file)){ tvSeen.add(p.file); tvFresh.push(p); }
+  }
+}
+function tvNext(){
+  if(!photos.length) return;
+  let p;
+  if(tvFresh.length) p = tvFresh.shift();
+  else { p = photos[tvIdx % photos.length]; tvIdx++; }
+  const inEl = tvOnA ? $("tvA") : $("tvB");
+  const outEl = tvOnA ? $("tvB") : $("tvA");
+  tvOnA = !tvOnA;
+  const img = new Image();
+  img.onload = () => {
+    inEl.src = img.src;
+    inEl.classList.add("on");
+    outEl.classList.remove("on");
+    $("tvcap").textContent = `shot by ${p.who}`;
+  };
+  img.src = publicUrl(p.file);
+}
+
+/* ---------- boot ---------- */
+if(isTV){
+  document.body.classList.add("tv");
+  const joinUrl = location.origin + location.pathname;
+  $("qrimg").src = "https://api.qrserver.com/v1/create-qr-code/?size=264x264&margin=1&color=0E1838&data=" + encodeURIComponent(joinUrl);
+  refresh().then(() => { photos.forEach(p => tvSeen.add(p.file)); tvFresh = []; tvNext(); });
+  setInterval(tvNext, 6000);
+  setInterval(refresh, 12000);
+}else{
+  $("snapBtn").onclick = () => { getName() ? $("camInput").click() : askName(() => $("camInput").click()); };
+  $("rollBtn").onclick = () => { getName() ? $("rollInput").click() : askName(() => $("rollInput").click()); };
+  $("camInput").onchange = e => { uploadFiles([...e.target.files]); e.target.value = ""; };
+  $("rollInput").onchange = e => { uploadFiles([...e.target.files]); e.target.value = ""; };
+  refresh();
+  setInterval(refresh, 8000);
+  if(!getName()) askName();
+}
+</script>
+</body>
+</html>
