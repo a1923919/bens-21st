@@ -183,6 +183,7 @@ main{padding:22px 14px calc(env(safe-area-inset-bottom) + 132px);max-width:1080p
 .card input::placeholder{color:var(--fg3)}
 .card input:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(216,169,78,.22)}
 .card .btn{margin-top:16px;width:100%}
+.card .namerow{display:flex;gap:10px}
 
 /* ---------- lightbox ---------- */
 .lb{
@@ -352,21 +353,30 @@ function askName(then){
     <div class="eyebrow">You’re on the guest list</div>
     <h2>Who’s shooting?</h2>
     <p>Your name goes on every print you take.</p>
-    <input id="nameIn" maxlength="24" placeholder="Your name" autocomplete="name" enterkeyhint="go">
+    <div class="namerow">
+      <input id="firstIn" maxlength="20" placeholder="First name" autocomplete="given-name" enterkeyhint="next">
+      <input id="lastIn" maxlength="20" placeholder="Last name" autocomplete="family-name" enterkeyhint="go">
+    </div>
     <button class="btn btn--gold" id="nameGo">Start shooting</button>
   </div>`;
   document.body.appendChild(veil);
-  const input = veil.querySelector("#nameIn");
-  setTimeout(() => input.focus(), 50);
+  const first = veil.querySelector("#firstIn");
+  const last = veil.querySelector("#lastIn");
+  setTimeout(() => first.focus(), 50);
   const go = () => {
-    const v = input.value.trim();
-    if(!v){ input.style.borderColor = "var(--coral)"; input.placeholder = "Tell us your name first"; return; }
-    localStorage.setItem("p21name", v);
+    let missing = false;
+    for(const inp of [first, last]){
+      if(!inp.value.trim()){ inp.style.borderColor = "var(--coral)"; missing = true; }
+      else inp.style.borderColor = "";
+    }
+    if(missing) return;
+    localStorage.setItem("p21name", `${first.value.trim()} ${last.value.trim()}`);
     veil.remove();
     if(then) then();
   };
   veil.querySelector("#nameGo").onclick = go;
-  input.onkeydown = e => { if(e.key === "Enter") go(); };
+  first.onkeydown = e => { if(e.key === "Enter") last.focus(); };
+  last.onkeydown = e => { if(e.key === "Enter") go(); };
 }
 
 /* ---------- helpers ---------- */
@@ -383,7 +393,7 @@ function flashFX(){
   document.body.appendChild(f);
   setTimeout(() => f.remove(), 600);
 }
-function slug(s){ return s.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,24) || "guest"; }
+function slug(s){ return s.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,40) || "guest"; }
 function deslug(s){ return s.replace(/-/g," ").replace(/\b\w/g, c => c.toUpperCase()); }
 function publicUrl(name){ return `${SUPA_URL}/storage/v1/object/public/${BUCKET}/${PREFIX}${name}`; }
 function thumbUrl(name){ return `${SUPA_URL}/storage/v1/object/public/${BUCKET}/thumbs/${name}`; }
