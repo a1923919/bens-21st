@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,500;0,6..96,700;1,6..96,500;1,6..96,600&family=Hanken+Grotesk:wght@400;600;700&display=swap">
+<style>
+@page { size: A4; margin: 0; }
+html, body { width: 210mm; height: 297mm; margin: 0; padding: 0; overflow: hidden; }
+.container {
+  width: 100%; height: 100%; box-sizing: border-box;
+  padding: 19mm 21mm 15mm;
+  background: #FFFFFF; color: #0E1838;
+  font-family: 'Hanken Grotesk', 'Gill Sans', 'Trebuchet MS', sans-serif;
+  display: flex; flex-direction: column; align-items: center; text-align: center;
+}
+.eyebrow { font-size: 22px; font-weight: 700; letter-spacing: .3em; color: #A9772C; text-transform: uppercase; }
+.display {
+  font-family: 'Bodoni Moda', 'Didot', 'Times New Roman', serif;
+  font-style: italic; font-weight: 500; font-size: 104px; line-height: 1.02; margin-top: 24px;
+  color: #B08234;
+}
+.rule { display: flex; align-items: center; gap: 16px; width: 100%; margin: 38px 0 40px; }
+.rule .line-l { flex: 1; height: 1px; background: linear-gradient(90deg, rgba(216,169,78,0), rgba(216,169,78,.7)); }
+.rule .line-r { flex: 1; height: 1px; background: linear-gradient(90deg, rgba(216,169,78,.7), rgba(216,169,78,0)); }
+.rule .d { color: #D8A94E; font-size: 15px; }
+.sections { display: flex; flex-direction: column; gap: 40px; width: 100%; }
+.sec h3 { margin: 0 0 12px; font-size: 18px; font-weight: 700; letter-spacing: .28em; color: #C2593A; text-transform: uppercase; }
+.sec p { margin: 0; font-size: 27px; line-height: 1.7; color: #0E1838; }
+.salute { font-family: 'Bodoni Moda', 'Didot', 'Times New Roman', serif; font-style: italic; font-size: 40px; color: #A9772C; margin-top: 44px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="eyebrow">Ben&rsquo;s 21st &nbsp;&#9670;&nbsp; 22 &middot; 08 &middot; 26</div>
+  <div class="display">Let&rsquo;s drink&hellip;</div>
+  <div class="rule"><div class="line-l"></div><div class="d">&#9670;</div><div class="line-r"></div></div>
+  <div class="sections">
+    <div class="sec"><h3>To Begin</h3><p>Soft Drinks<br>Mineral Water<br>Bottled Beers</p></div>
+    <div class="sec"><h3>From the Cellar</h3><p>Mionetto Prosecco<br>Bellini Cipriani<br>Fiore White Moscato<br>Altezza Pinot Grigio<br>Altezza Shiraz<br>Altezza Pinot Noir</p></div>
+    <div class="sec"><h3>After Dinner &nbsp;&middot;&nbsp; From 9.30pm</h3><p>House Spirits &amp; Mixers</p></div>
+  </div>
+  <div class="salute">Salute!</div>
+</div>
+</body>
+</html>

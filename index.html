@@ -197,9 +197,32 @@ main{padding:22px 14px calc(env(safe-area-inset-bottom) + 132px);max-width:1080p
 /* ---------- lightbox ---------- */
 .lb{
   position:fixed;inset:0;z-index:70;background:rgba(8,15,38,.96);
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:20px;
+  display:flex;flex-direction:column;align-items:center;padding:20px;
+  overflow-y:auto;
 }
-.lb img{max-width:100%;max-height:72vh;border-radius:6px;border:6px solid var(--sand-100);box-shadow:var(--shadow-lg)}
+.lbwrap{
+  margin:auto;max-width:600px;width:100%;
+  display:flex;flex-direction:column;align-items:center;gap:16px;
+}
+.lbwrap > img{max-width:100%;max-height:64vh;border-radius:6px;border:6px solid var(--sand-100);box-shadow:var(--shadow-lg)}
+.lbrule{display:flex;align-items:center;gap:12px;width:100%;margin-top:8px}
+.lbrule span{flex:1;height:1px;background:linear-gradient(90deg,transparent,rgba(216,169,78,.5),transparent)}
+.lbrule i{font-style:normal;color:var(--gold);font-size:11px}
+.lbhead{
+  font-size:12px;font-weight:700;letter-spacing:.24em;text-transform:uppercase;
+  color:var(--terracotta-300);
+}
+.strip{
+  display:flex;gap:10px;width:100%;overflow-x:auto;padding:4px 2px 14px;
+  -webkit-overflow-scrolling:touch;
+}
+.stripth{
+  flex:0 0 auto;width:86px;height:86px;padding:4px;cursor:pointer;
+  background:var(--sand-100);border:none;border-radius:3px;box-shadow:var(--shadow-md);
+  transition:transform var(--t-fast) var(--ease-disco);
+}
+.stripth:active{transform:scale(.92)}
+.stripth img{width:100%;height:100%;object-fit:cover;border-radius:2px;display:block}
 .lb .who{font-family:var(--font-display);font-style:italic;font-size:22px}
 .lb .reacts{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
 .lb .reacts button{
@@ -678,25 +701,40 @@ async function savePhoto(p, blob, btn){
 function lightbox(p){
   const lb = document.createElement("div");
   lb.className = "lb";
-  const r = reactions[p.file] || {};
-  lb.innerHTML = `<img src="${publicUrl(p.file)}" alt="">
-    <div class="who">shot by ${p.who}</div>
-    <div class="reacts">${EMOJIS.map(e =>
-      `<button data-e="${e}" class="${myReacts.has(p.file + "|" + e) ? "mine" : ""}">${e}<span>${r[e] || ""}</span></button>`
-    ).join("")}</div>
-    <div class="row">
-      <button class="btn btn--primary" id="saveBtn">Save photo</button>
-      <button class="btn btn--ghost" id="closeBtn">Close</button>
-    </div>`;
-  lb.querySelectorAll(".reacts button").forEach(b => {
-    b.onclick = e => { e.stopPropagation(); react(p, b.dataset.e, b); };
-  });
-  let blob = null;
-  fetch(publicUrl(p.file)).then(r => r.blob()).then(b => { blob = b; }).catch(() => {});
-  lb.querySelector("#saveBtn").onclick = e => savePhoto(p, blob, e.currentTarget);
-  lb.querySelector("#closeBtn").onclick = () => lb.remove();
-  lb.onclick = e => { if(e.target === lb) lb.remove(); };
   document.body.appendChild(lb);
+  const show = cur => {
+    const r = reactions[cur.file] || {};
+    const others = photos.filter(x => x.file !== cur.file && x.who === cur.who);
+    lb.innerHTML = `<div class="lbwrap">
+      <img src="${publicUrl(cur.file)}" alt="">
+      <div class="who">shot by ${cur.who}</div>
+      <div class="reacts">${EMOJIS.map(e =>
+        `<button data-e="${e}" class="${myReacts.has(cur.file + "|" + e) ? "mine" : ""}">${e}<span>${r[e] || ""}</span></button>`
+      ).join("")}</div>
+      <div class="row">
+        <button class="btn btn--primary" id="saveBtn">Save photo</button>
+        <button class="btn btn--ghost" id="closeBtn">Close</button>
+      </div>
+      ${others.length ? `
+      <div class="lbrule"><span></span><i>◆</i><span></span></div>
+      <div class="lbhead">Other Photos by ${cur.who}</div>
+      <div class="strip">${others.map((o, i) =>
+        `<button class="stripth" data-i="${i}"><img loading="lazy" src="${thumbUrl(o.file)}" onerror="this.onerror=null;this.src='${publicUrl(o.file)}'" alt="Photo by ${o.who}"></button>`
+      ).join("")}</div>` : ``}
+    </div>`;
+    lb.querySelectorAll(".reacts button").forEach(b => {
+      b.onclick = e => { e.stopPropagation(); react(cur, b.dataset.e, b); };
+    });
+    let blob = null;
+    fetch(publicUrl(cur.file)).then(x => x.blob()).then(b => { blob = b; }).catch(() => {});
+    lb.querySelector("#saveBtn").onclick = e => savePhoto(cur, blob, e.currentTarget);
+    lb.querySelector("#closeBtn").onclick = () => lb.remove();
+    lb.querySelectorAll(".stripth").forEach(b => {
+      b.onclick = e => { e.stopPropagation(); show(others[Number(b.dataset.i)]); lb.scrollTop = 0; };
+    });
+  };
+  show(p);
+  lb.onclick = e => { if(e.target === lb) lb.remove(); };
 }
 
 /* ---------- TV slideshow ---------- */
