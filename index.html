@@ -534,8 +534,21 @@ async function uploadFiles(files){
 const EMOJIS = ["❤️","😂","🔥","🥂","😮","💦","🍆"];
 let reactions = {};
 const myReacts = new Set(JSON.parse(localStorage.getItem("p21reacts") || "[]"));
-async function fetchReactions(){
+let reactCountSeen = null;
+async function reactionsChanged(){
+  const res = await fetch(`${SUPA_URL}/rest/v1/party21_reactions?select=id`, {
+    method: "HEAD",
+    headers: { "apikey": SUPA_KEY, "Authorization": `Bearer ${SUPA_KEY}`, "Prefer": "count=exact", "Range": "0-0" }
+  });
+  const cr = res.headers.get("content-range");
+  const total = cr && cr.split("/")[1];
+  if(total !== null && total === reactCountSeen) return false;
+  reactCountSeen = total;
+  return true;
+}
+async function fetchReactions(force){
   try{
+    if(!force && !(await reactionsChanged())) return;
     const res = await fetch(`${SUPA_URL}/rest/v1/party21_reactions?select=photo,emoji`, {
       headers: { "apikey": SUPA_KEY, "Authorization": `Bearer ${SUPA_KEY}`, "Range": "0-19999" }
     });
@@ -658,9 +671,27 @@ setInterval(() => {
   if(s && s.getBoundingClientRect().top < innerHeight + 1400) appendChunk();
 }, 500);
 
-async function refresh(){
+/* cheap change probe: one newest-row request (~0.4KB) instead of the full
+   list; 150 phones polling all night stays within Supabase free egress */
+let newestSeen = null;
+async function listChanged(){
+  if(!photos.length) return true;
+  const res = await fetch(`${SUPA_URL}/storage/v1/object/list/${BUCKET}`, {
+    method: "POST",
+    headers: { "Authorization": `Bearer ${SUPA_KEY}`, "apikey": SUPA_KEY, "Content-Type": "application/json" },
+    body: JSON.stringify({ prefix: PREFIX, limit: 1, sortBy: { column: "name", order: "desc" } })
+  });
+  if(!res.ok) return false;
+  const rows = await res.json();
+  const newest = rows[0] && rows[0].name;
+  if(newest === newestSeen) return false;
+  return true;
+}
+async function refresh(force){
   try{
+    if(!force && !(await listChanged())) return;
     const next = await fetchList();
+    newestSeen = next[0] && next[0].file;
     const changed = next.length !== photos.length || (next[0] && photos[0] && next[0].file !== photos[0].file);
     photos = next;
     if(isTV) tvQueueSync();
@@ -775,10 +806,13 @@ if(isTV){
   $("rollBtn").onclick = () => { getName() ? $("rollInput").click() : askName(() => $("rollInput").click()); };
   $("camInput").onchange = e => { uploadFiles([...e.target.files]); e.target.value = ""; };
   $("rollInput").onchange = e => { uploadFiles([...e.target.files]); e.target.value = ""; };
-  refresh();
-  fetchReactions();
-  setInterval(refresh, 8000);
-  setInterval(fetchReactions, 10000);
+  refresh(true);
+  fetchReactions(true);
+  setInterval(() => { if(!document.hidden) refresh(); }, 8000);
+  setInterval(() => { if(!document.hidden) fetchReactions(); }, 10000);
+  document.addEventListener("visibilitychange", () => {
+    if(!document.hidden){ refresh(); fetchReactions(); }
+  });
   if(!getName()) askName();
 }
 </script>
